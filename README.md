@@ -11,7 +11,8 @@ This project's objective is to create a star schema for songplay analysis.
 - time - timestamps of records in songplays broken down into specific units
 
 ### Something Extra
-I've used copy command to bulk insert log data into the database instead of multiple insert queries
+I've used copy command to bulk insert log data into the database instead of multiple insert queries.<br>
+You can find the copy command below in ``etl.py`` under ``process_log_file`` function.
 ```
 cur.copy_from(str_buffer, "songplays", sep="\t", columns=songplay_columns)
 ```
