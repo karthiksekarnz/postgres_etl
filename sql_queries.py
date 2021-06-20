@@ -63,7 +63,7 @@ user_agent text
 user_table_insert = ("""
 INSERT INTO users
 (id, first_name, last_name, gender, level) 
-VALUES(%s, %s, %s, %s, %s) ON CONFLICT (id) DO NOTHING
+VALUES(%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET level = EXCLUDED.level
 """)
 
 song_table_insert = ("""

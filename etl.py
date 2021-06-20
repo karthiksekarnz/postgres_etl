@@ -1,12 +1,24 @@
 import os
 import io
 import glob
+import numpy as np
 import psycopg2
 import pandas as pd
 from sql_queries import *
 
 
 def process_song_file(cur, filepath):
+    """
+    Description: This function is responsible for extracting the data from song file
+    and load them into database tables
+
+    Arguments:
+        cur: Cursor object
+        filepath: File path of the song data file as a string.
+
+    Returns:
+        None
+    """
     # open song file
     df = pd.read_json(filepath, typ="Series")
 
@@ -21,6 +33,18 @@ def process_song_file(cur, filepath):
 
 
 def process_log_file(cur, filepath):
+    """
+        Description: This function is responsible for extracting the data from log files
+        and transform the data and persist the song play data into songplays table
+        for analysis
+
+        Arguments:
+            cur: Cursor object
+            filepath: File path of the log data file as a string.
+
+        Returns:
+            None
+        """
     # open log file
     df = pd.read_json(filepath, lines=True)
     df.fillna(0, inplace=True)
@@ -32,7 +56,7 @@ def process_log_file(cur, filepath):
     t = pd.to_datetime(df["ts"], unit="ms")
 
     # insert time data records
-    time_data = [t, t.dt.hour, t.dt.day, t.dt.isocalendar().week, t.dt.month, t.dt.year, t.dt.weekday]
+    time_data = [t, t.dt.hour, t.dt.day, t.dt.weekofyear, t.dt.month, t.dt.year, t.dt.weekday]
     column_labels = ["start_time", "hour", "day", "weekofyear", "month", "year", "weekday"]
     time_df = pd.DataFrame(dict(zip(column_labels, time_data)))
 
@@ -41,8 +65,7 @@ def process_log_file(cur, filepath):
 
     # load user table
     user_df = df[["userId", "firstName", "lastName", "gender", "level"]]
-    user_df.drop(df[df.userId == ""].index)
-    user_df.drop_duplicates(subset=["userId"])
+    user_df["userId"].replace("", np.NAN).dropna()
 
     # insert user records
     for i, row in user_df.iterrows():
@@ -76,6 +99,19 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    """
+    Description: This function is responsible for traversing through the directories and pass
+    the data filepath to the transformation functions
+
+    Arguments:
+        cur: Cursor object.
+        conn: Connection to the database.
+        filepath: Log or song data file path.
+        func: function that further process the song or log data to transform and persist into database
+
+    Returns:
+        None
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
