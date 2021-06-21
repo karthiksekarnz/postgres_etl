@@ -73,9 +73,10 @@ def process_log_file(cur, filepath):
             cur.execute(user_table_insert, row)
 
     songplay_df = pd.DataFrame()
+
     for index, row in df.iterrows():
         # get songid and artistid from song and artist tables
-        cur.execute(song_select, (row.song, row.artist, row.length))
+        cur.execute(song_select, (str(row.song), str(row.artist), str(row.length)))
         results = cur.fetchone()
 
         if results:
@@ -85,7 +86,7 @@ def process_log_file(cur, filepath):
 
         # insert songplay record
         ts = pd.to_datetime(row.ts, unit="ms")
-        if row.userId != "":
+        if row.userId:
             songplay_data = pd.Series(
                 [ts, row.userId, row.level, songid, artistid, row.sessionId, row.location, row.userAgent], dtype=str)
             songplay_df = songplay_df.append(songplay_data, ignore_index=True)
